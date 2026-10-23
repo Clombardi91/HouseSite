@@ -1,0 +1,88 @@
+---
+/**
+ * A property photograph at its natural proportions (never cropped), or a
+ * clearly labelled placeholder when the file hasn't been added yet.
+ * When the photo is part of the gallery it opens the full-screen viewer.
+ */
+import { Picture } from 'astro:assets';
+import { getPhoto, lightboxIndex } from '../lib/content';
+
+interface Props {
+  id: string;
+  sizes?: string;
+  loading?: 'lazy' | 'eager';
+  priority?: boolean;
+  class?: string;
+  /** Disable the scroll-reveal for this image. */
+  still?: boolean;
+  /** Show the caption beneath the image. */
+  caption?: boolean;
+  /** Limit height to this share of the viewport (by narrowing, never cropping). */
+  maxVh?: number;
+}
+
+const { id, sizes = '100vw', loading = 'lazy', priority = false, class: className = '', still = false, caption = false, maxVh } = Astro.props;
+const photo = getPhoto(id);
+const index = photo ? lightboxIndex(id) : -1;
+const zoom = index >= 0;
+const widths = photo?.image ? [480, 800, 1200, 1600, 2000, 2600].filter((w) => w <= photo.image!.width) : [];
+if (photo?.image && widths.length === 0) widths.push(photo.image.width);
+const Tag = zoom ? 'button' : 'div';
+---
+
+{photo ? (
+  <figure class:list={['group', className]} style={maxVh ? `max-width: calc(${maxVh}svh * ${photo.aspect}); margin-inline: auto` : undefined}>
+    <Tag
+      class:list={['block w-full text-left', zoom && 'zoomable']}
+      {...(zoom ? { type: 'button', 'data-lightbox-open': index, 'aria-label': `View larger: ${photo.alt}` } : {})}
+      {...(!still ? { 'data-reveal-image': '' } : {})}
+    >
+      <div class="frame" style={`aspect-ratio: ${photo.aspect}`}>
+        {photo.image ? (
+          <Picture
+            src={photo.image}
+            formats={['avif', 'webp']}
+            widths={widths}
+            sizes={sizes}
+            alt={photo.alt}
+            loading={loading}
+            decoding={priority ? 'sync' : 'async'}
+            fetchpriority={priority ? 'high' : 'auto'}
+          />
+        ) : (
+          <div class="photo-placeholder" role="img" aria-label={`Photograph to come: ${photo.alt}`}>
+            <span class="eyebrow !text-[0.6rem] !text-muted">Photograph to come</span>
+            <span class="font-serif text-xl leading-tight text-ink md:text-2xl">{photo.caption ?? photo.alt}</span>
+            <code class="text-[0.65rem] tracking-wide text-muted">src/assets/photos/{photo.file}</code>
+          </div>
+        )}
+      </div>
+    </Tag>
+    {caption && photo.caption && <figcaption class="mt-3 text-[0.8rem] tracking-wide text-muted">{photo.caption}</figcaption>}
+  </figure>
+) : (
+  <div class="photo-placeholder" style="aspect-ratio: 1.5">
+    <span class="eyebrow !text-[0.6rem] !text-muted">Unknown photo id</span>
+    <code class="text-xs text-muted">{id}</code>
+  </div>
+)}
+
+<style>
+  .photo-placeholder {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.6rem;
+    padding: 1.5rem;
+    text-align: center;
+    background:
+      repeating-linear-gradient(135deg, transparent 0 22px, rgb(36 35 31 / 0.035) 22px 23px),
+      linear-gradient(160deg, #e9e3d8, #ddd5c7);
+    outline: 1px dashed rgb(36 35 31 / 0.18);
+    outline-offset: -10px;
+  }
+  div.photo-placeholder[style] { position: relative; }
+</style>

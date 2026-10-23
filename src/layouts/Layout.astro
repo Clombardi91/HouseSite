@@ -1,0 +1,104 @@
+---
+import '../styles/global.css';
+import { getImage } from 'astro:assets';
+import { property } from '../config/property';
+import { contentChecklist, formatPrice, galleryPhotos, getPhoto, identity } from '../lib/content';
+
+const { site, address, facts } = property;
+const title = property.address.street
+  ? `${property.address.street} · ${property.address.city}, ${property.address.state}${property.status === 'sold' ? ' · Sold' : ''}`
+  : site.title;
+const canonical = Astro.site ? new URL('/', Astro.site).href : undefined;
+
+// Open Graph image: the hero photograph, cropped for link previews.
+const hero = getPhoto(property.hero.photo);
+const og = hero?.image ? await getImage({ src: hero.image, width: 1200, height: 630, fit: 'cover', format: 'jpg', quality: 82 }) : null;
+const ogUrl = og ? (Astro.site ? new URL(og.src, Astro.site).href : og.src) : null;
+
+// Structured data — only facts that are known to be true.
+const imageUrls = Astro.site
+  ? await Promise.all(
+      galleryPhotos()
+        .filter((p) => p.image)
+        .slice(0, 8)
+        .map(async (p) => new URL((await getImage({ src: p.image!, width: 1600, format: 'jpg' })).src, Astro.site).href),
+    )
+  : [];
+const residence: Record<string, unknown> = {
+  '@type': 'SingleFamilyResidence',
+  name: identity(),
+  address: {
+    '@type': 'PostalAddress',
+    ...(address.street ? { streetAddress: address.street } : {}),
+    addressLocality: address.city,
+    addressRegion: address.state,
+    ...(address.zip ? { postalCode: address.zip } : {}),
+    addressCountry: 'US',
+  },
+  numberOfBedrooms: facts.bedrooms,
+  numberOfBathroomsTotal: facts.bathrooms,
+  ...(facts.squareFeetVerified ? { floorSize: { '@type': 'QuantitativeValue', value: facts.squareFeet, unitCode: 'FTK' } } : {}),
+};
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'RealEstateListing',
+  name: title,
+  description: site.description,
+  ...(canonical ? { url: canonical } : {}),
+  ...(imageUrls.length ? { image: imageUrls } : {}),
+  about: residence,
+  ...(property.price != null && property.status !== 'sold'
+    ? { offers: { '@type': 'Offer', price: property.price, priceCurrency: 'USD', availability: 'https://schema.org/InStock' } }
+    : {}),
+};
+
+const checklist = contentChecklist();
+const g = globalThis as { __checklistShown?: boolean };
+if (import.meta.env.PROD && checklist.length && !g.__checklistShown) {
+  g.__checklistShown = true;
+  console.warn(`\n◆ Content still to supply before publishing (${checklist.length}):\n  - ${checklist.join('\n  - ')}\n`);
+}
+const priceText = formatPrice(property.price);
+const description = priceText && property.status !== 'sold' ? `${priceText} · ${site.description}` : site.description;
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    {canonical && <link rel="canonical" href={canonical} />}
+    <meta name="theme-color" content="#f7f4ee" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link rel="manifest" href="/site.webmanifest" />
+
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    {canonical && <meta property="og:url" content={canonical} />}
+    {ogUrl && <meta property="og:image" content={ogUrl} />}
+    {ogUrl && <meta property="og:image:width" content="1200" />}
+    {ogUrl && <meta property="og:image:height" content="630" />}
+    {ogUrl && hero && <meta property="og:image:alt" content={hero.alt} />}
+    <meta name="twitter:card" content={ogUrl ? 'summary_large_image' : 'summary'} />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={description} />
+    {ogUrl && <meta name="twitter:image" content={ogUrl} />}
+
+    <script type="application/ld+json" set:html={JSON.stringify(jsonLd)} />
+    <script is:inline>document.documentElement.classList.add('js');</script>
+  </head>
+  <body>
+    <a href="#main" class="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[100] focus:bg-ivory focus:px-4 focus:py-2">Skip to content</a>
+    <slot />
+    {import.meta.env.DEV && checklist.length > 0 && (
+      <details class="fixed bottom-3 left-3 z-[90] max-h-[60vh] w-80 overflow-auto border border-line bg-ivory/95 p-3 text-xs shadow-sm backdrop-blur">
+        <summary class="cursor-pointer font-medium tracking-wide">Content checklist ({checklist.length}) · dev only</summary>
+        <ul class="mt-2 list-disc space-y-1 pl-4 text-muted">{checklist.map((c) => <li>{c}</li>)}</ul>
+      </details>
+    )}
+  </body>
+</html>

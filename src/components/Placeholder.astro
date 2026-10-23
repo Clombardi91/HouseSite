@@ -1,0 +1,6 @@
+---
+/** Marks information that hasn't been supplied yet. Edit src/config/property.ts to replace it. */
+interface Props { label: string }
+const { label } = Astro.props;
+---
+<span class="placeholder" title="Add this in src/config/property.ts">[ {label} ]</span>

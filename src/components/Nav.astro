@@ -1,0 +1,145 @@
+---
+import Mark from './Mark.astro';
+import { property } from '../config/property';
+import { identity } from '../lib/content';
+const short = property.address.street ?? `${property.address.city}, ${property.address.state}`;
+
+const links = [
+  { href: '#residence', label: 'The Home' },
+  { href: '#spaces', label: 'Spaces' },
+  { href: '#gallery', label: 'Gallery' },
+  { href: '#details', label: 'Details' },
+  { href: '#documents', label: 'Documents' },
+  { href: '#location', label: 'Location' },
+];
+const cta = property.status === 'sold' ? 'Contact' : 'Schedule a Showing';
+---
+
+<header id="site-nav" class="nav fixed inset-x-0 top-0 z-50" data-state="top">
+  <div class="container-x flex h-16 items-center justify-between gap-6 md:h-[4.5rem]">
+    <a href="#top" class="flex min-w-0 items-center gap-3" aria-label={`${identity()} — back to top`}>
+      <Mark class="h-7 w-7 shrink-0" />
+      <span class="truncate text-[0.68rem] font-medium uppercase tracking-[0.26em]"><span class="sm:hidden">{short}</span><span class="hidden sm:inline">{identity()}</span></span>
+    </a>
+    <nav aria-label="Primary" class="hidden lg:block">
+      <ul class="flex items-center gap-8 text-[0.68rem] font-medium uppercase tracking-[0.22em]">
+        {links.map((l) => <li><a class="nav-link" href={l.href}>{l.label}</a></li>)}
+      </ul>
+    </nav>
+    <div class="flex items-center gap-4">
+      <a href="#contact" class="nav-cta hidden text-[0.68rem] font-medium uppercase tracking-[0.22em] sm:inline-flex">{cta}</a>
+      <button
+        type="button"
+        class="menu-toggle -mr-2 flex h-11 items-center gap-3 px-2 text-[0.68rem] font-medium uppercase tracking-[0.22em] lg:hidden"
+        aria-expanded="false"
+        aria-controls="mobile-menu"
+      >
+        <span class="menu-label">Menu</span>
+        <span class="burger" aria-hidden="true"><span></span><span></span></span>
+      </button>
+    </div>
+  </div>
+</header>
+
+<div id="mobile-menu" class="mobile-menu fixed inset-0 z-40 flex flex-col bg-ivory lg:hidden" hidden>
+  <nav aria-label="Mobile" class="container-x flex flex-1 flex-col justify-center pt-16">
+    <ol class="space-y-1">
+      {links.concat({ href: '#contact', label: cta }).map((l, i) => (
+        <li class="menu-item" style={`--i:${i}`}>
+          <a href={l.href} class="flex items-baseline gap-5 py-2">
+            <span class="w-6 text-[0.65rem] tracking-[0.2em] text-muted">{String(i + 1).padStart(2, '0')}</span>
+            <span class="font-serif text-[2.35rem] leading-none text-charcoal">{l.label}</span>
+          </a>
+        </li>
+      ))}
+    </ol>
+  </nav>
+  <div class="container-x pb-[max(2rem,env(safe-area-inset-bottom))] text-[0.65rem] uppercase tracking-[0.26em] text-muted">
+    {property.address.city}, {property.address.stateName}
+  </div>
+</div>
+
+<style>
+  .nav { color: #fff; transition: background-color 0.5s var(--ease-editorial), color 0.5s var(--ease-editorial), transform 0.6s var(--ease-editorial), border-color 0.5s; border-bottom: 1px solid transparent; }
+  .nav::before { content: ''; position: absolute; inset: 0 0 -60% 0; z-index: -1; background: linear-gradient(to bottom, rgb(20 19 17 / 0.42), rgb(20 19 17 / 0.14) 55%, transparent); opacity: 0; transition: opacity 0.5s; pointer-events: none; }
+  .nav[data-state='top']::before { opacity: 1; }
+  .nav[data-state='solid'], .nav[data-state='menu'] { background: rgb(247 244 238 / 0.92); color: var(--color-charcoal); border-color: var(--color-line); backdrop-filter: saturate(1.2) blur(14px); -webkit-backdrop-filter: saturate(1.2) blur(14px); }
+  .nav[data-state='menu'] { background: var(--color-ivory); border-color: transparent; }
+  .nav[data-hidden='true'] { transform: translateY(-100%); }
+  .nav-link { position: relative; padding-block: 0.4rem; opacity: 0.85; transition: opacity 0.3s; }
+  .nav-link::after { content: ''; position: absolute; left: 0; right: 0; bottom: 0; height: 1px; background: currentColor; transform: scaleX(0); transform-origin: right; transition: transform 0.5s var(--ease-editorial); }
+  .nav-link:hover, .nav-link[aria-current='true'] { opacity: 1; }
+  .nav-link:hover::after, .nav-link[aria-current='true']::after { transform: scaleX(1); transform-origin: left; }
+  .nav-cta { border: 1px solid currentColor; padding: 0.7rem 1.1rem; opacity: 0.95; transition: background-color 0.4s, color 0.4s; }
+  .nav[data-state='top'] .nav-cta:hover { background: #fff; color: var(--color-charcoal); }
+  .nav[data-state='solid'] .nav-cta:hover { background: var(--color-charcoal); color: var(--color-ivory); }
+  .burger { position: relative; width: 22px; height: 10px; }
+  .burger span { position: absolute; left: 0; right: 0; height: 1px; background: currentColor; transition: transform 0.45s var(--ease-editorial), top 0.45s var(--ease-editorial); }
+  .burger span:first-child { top: 0; }
+  .burger span:last-child { top: 9px; }
+  [aria-expanded='true'] .burger span:first-child { top: 4.5px; transform: rotate(45deg); }
+  [aria-expanded='true'] .burger span:last-child { top: 4.5px; transform: rotate(-45deg); }
+  .mobile-menu { opacity: 0; transition: opacity 0.45s var(--ease-editorial); }
+  .mobile-menu.is-open { opacity: 1; }
+  .menu-item { opacity: 0; transform: translateY(14px); transition: opacity 0.6s var(--ease-editorial), transform 0.6s var(--ease-editorial); transition-delay: calc(var(--i) * 45ms + 80ms); }
+  .is-open .menu-item { opacity: 1; transform: none; }
+</style>
+
+<script>
+  const nav = document.getElementById('site-nav')!;
+  const menu = document.getElementById('mobile-menu')!;
+  const toggle = nav.querySelector<HTMLButtonElement>('.menu-toggle')!;
+  const label = toggle.querySelector('.menu-label')!;
+  const hero = document.getElementById('top');
+  let lastY = window.scrollY;
+  let open = false;
+
+  function update() {
+    const y = window.scrollY;
+    const heroEnd = hero ? hero.offsetHeight - 80 : 200;
+    if (open) return;
+    nav.dataset.state = y < heroEnd ? 'top' : 'solid';
+    // Step aside while reading downward; return on any upward scroll.
+    const hide = y > heroEnd + 200 && y > lastY + 4;
+    if (hide) nav.dataset.hidden = 'true';
+    else if (y < lastY - 4 || y < heroEnd) nav.dataset.hidden = 'false';
+    lastY = y;
+  }
+
+  function setMenu(next: boolean) {
+    open = next;
+    toggle.setAttribute('aria-expanded', String(next));
+    label.textContent = next ? 'Close' : 'Menu';
+    document.documentElement.style.overflow = next ? 'hidden' : '';
+    if (next) {
+      menu.hidden = false;
+      nav.dataset.state = 'menu';
+      nav.dataset.hidden = 'false';
+      requestAnimationFrame(() => menu.classList.add('is-open'));
+      menu.querySelector('a')?.focus({ preventScroll: true });
+    } else {
+      menu.classList.remove('is-open');
+      setTimeout(() => { if (!open) menu.hidden = true; }, 450);
+      update();
+    }
+  }
+
+  toggle.addEventListener('click', () => setMenu(!open));
+  menu.addEventListener('click', (e) => { if ((e.target as Element).closest('a')) setMenu(false); });
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && open) { setMenu(false); toggle.focus(); } });
+  window.addEventListener('scroll', () => requestAnimationFrame(update), { passive: true });
+  update();
+
+  // Mark the section currently in view.
+  const links = [...nav.querySelectorAll<HTMLAnchorElement>('.nav-link')];
+  const io = new IntersectionObserver(
+    (entries) => {
+      for (const entry of entries) {
+        if (!entry.isIntersecting) continue;
+        links.forEach((a) => a.setAttribute('aria-current', String(a.hash === `#${entry.target.id}`)));
+      }
+    },
+    { rootMargin: '-45% 0px -50% 0px' },
+  );
+  links.forEach((a) => { const s = document.querySelector(a.hash); if (s) io.observe(s); });
+</script>

@@ -1,0 +1,57 @@
+---
+import Placeholder from './Placeholder.astro';
+import ShareButton from './ShareButton.astro';
+import { property } from '../config/property';
+import { formatPrice, statusLabels } from '../lib/content';
+
+const { facts, status } = property;
+const price = formatPrice(status === 'sold' ? property.soldPrice : property.price);
+const priceLabel = { 'coming-soon': 'To be offered at', 'for-sale': 'Offered at', 'under-contract': 'Under contract · Offered at', sold: 'Sold' }[status];
+const items = [
+  { value: String(facts.bedrooms), label: 'Bedrooms' },
+  { value: String(facts.bathrooms), label: 'Bathrooms' },
+  { value: facts.squareFeet.toLocaleString('en-US'), label: 'Approx. Sq. Ft.', mark: '*' },
+  { value: facts.garage.split('-')[0], label: facts.garage.replace(/^\d+-?/, '').trim() || 'Garage' },
+];
+---
+
+<section id="residence" class="relative bg-ivory pb-20 pt-16 md:pb-28 md:pt-28" aria-labelledby="facts-heading">
+  <div class="container-x">
+    <div class="flex flex-col gap-8 md:flex-row md:items-end md:justify-between" data-reveal>
+      <div>
+        <h2 id="facts-heading" class="eyebrow">{priceLabel}</h2>
+        <p class="mt-4 font-serif text-[clamp(2.9rem,8vw,5.6rem)] font-light leading-none tracking-tight">
+          {status === 'sold' ? (price ?? statusLabels.sold) : price ?? <Placeholder label="Asking price" />}
+        </p>
+      </div>
+      <div class="flex items-center gap-8 text-[0.68rem] font-medium uppercase tracking-[0.22em]">
+        <ShareButton class="text-ink hover:text-sage" />
+        <a href="#contact" class="link-line text-ink">{status === 'sold' ? 'Contact' : 'Request a showing'}</a>
+      </div>
+    </div>
+
+    <hr class="rule mt-12 md:mt-16" />
+    <dl class="grid grid-cols-2 md:grid-cols-4">
+      {items.map((it, i) => (
+        <div
+          class:list={[
+            'flex flex-col gap-3 py-8 md:py-10',
+            i % 2 === 1 && 'border-l border-line pl-6 md:pl-10',
+            i >= 2 && 'border-t border-line md:border-t-0',
+            i === 2 && 'md:border-l md:pl-10',
+            i > 0 && 'md:pl-10',
+          ]}
+          data-reveal
+          style={`--reveal-delay:${i * 0.08}s`}
+        >
+          <dt class="order-2 text-[0.68rem] font-medium uppercase tracking-[0.24em] text-muted">{it.label}</dt>
+          <dd class="order-1 font-serif text-[clamp(2.6rem,5.5vw,4rem)] font-light leading-none">
+            {it.value}{it.mark && <span class="align-super text-[0.4em] text-brass">{it.mark}</span>}
+          </dd>
+        </div>
+      ))}
+    </dl>
+    <hr class="rule" />
+    <p class="mt-5 max-w-2xl text-[0.78rem] leading-relaxed text-muted"><span class="text-brass">*</span> {facts.squareFeetNote}</p>
+  </div>
+</section>

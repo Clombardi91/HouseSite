@@ -1,0 +1,17 @@
+---
+import FeaturedSpace from './FeaturedSpace.astro';
+import { property } from '../config/property';
+---
+
+<section id="spaces" aria-labelledby="spaces-heading">
+  <div class="border-t border-line bg-ivory">
+    <div class="container-x flex flex-col gap-6 py-20 md:flex-row md:items-end md:justify-between md:py-28" data-reveal>
+      <div>
+        <p class="eyebrow flex items-center gap-4"><span class="brass-rule"></span>Room by Room</p>
+        <h2 id="spaces-heading" class="display mt-7 text-[clamp(2.5rem,6.4vw,5.4rem)]">Featured Spaces</h2>
+      </div>
+      <p class="max-w-sm text-ink">A closer look at the rooms that shape daily life here — from the vaulted living room to the backyard beneath the trees.</p>
+    </div>
+  </div>
+  {property.featured.map((space, i) => <FeaturedSpace space={space} index={i} />)}
+</section>

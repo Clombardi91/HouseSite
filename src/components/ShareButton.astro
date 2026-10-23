@@ -1,0 +1,33 @@
+---
+/** Shares the page with the native share sheet, or copies the link where that isn't available. */
+import { property } from '../config/property';
+import { identity } from '../lib/content';
+interface Props { class?: string; label?: string }
+const { class: className = '', label = 'Share this home' } = Astro.props;
+---
+<button type="button" class:list={['share-btn inline-flex items-center gap-2.5', className]} data-share-title={`${identity()} — ${property.address.city}, ${property.address.state}`}>
+  <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" aria-hidden="true"><path d="M12 15V3M7.5 7.5 12 3l4.5 4.5M5 12v8h14v-8" /></svg>
+  <span class="share-label">{label}</span>
+</button>
+<script>
+  for (const btn of document.querySelectorAll<HTMLButtonElement>('.share-btn:not([data-bound])')) {
+    btn.dataset.bound = '';
+    const labelEl = btn.querySelector('.share-label')!;
+    const original = labelEl.textContent;
+    btn.addEventListener('click', async () => {
+      const url = location.origin + location.pathname;
+      const title = btn.dataset.shareTitle ?? document.title;
+      if (navigator.share) {
+        try { await navigator.share({ title, url }); } catch { /* dismissed */ }
+        return;
+      }
+      try {
+        await navigator.clipboard.writeText(url);
+        labelEl.textContent = 'Link copied';
+      } catch {
+        window.prompt('Copy this link:', url);
+      }
+      setTimeout(() => (labelEl.textContent = original), 2200);
+    });
+  }
+</script>

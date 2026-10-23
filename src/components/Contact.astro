@@ -1,0 +1,171 @@
+---
+import Placeholder from './Placeholder.astro';
+import ShareButton from './ShareButton.astro';
+import { property } from '../config/property';
+import { telHref } from '../lib/content';
+
+const { contact, status } = property;
+const { provider, endpoint, accessKey } = contact.form;
+// The form is only offered when it can genuinely deliver a message.
+const formReady =
+  (provider === 'formspree' && !!endpoint) || (provider === 'web3forms' && !!accessKey) || provider === 'netlify';
+const sold = status === 'sold';
+const heading = sold ? 'This home has sold.' : 'Arrange a private showing.';
+const intro = sold
+  ? 'Thank you for your interest. If you have questions about the home or the area, we would be glad to hear from you.'
+  : contact.showingInstructions;
+const subject = `Property inquiry: ${property.address.street ? `${property.address.street}, ` : ''}${property.address.city}, ${property.address.state}`;
+---
+
+<section id="contact" class="bg-charcoal py-24 text-ivory md:py-36" aria-labelledby="contact-heading">
+  <div class="container-x grid gap-16 md:grid-cols-12 md:gap-x-10">
+    <div class="md:col-span-5" data-reveal>
+      <p class="eyebrow flex items-center gap-4 !text-sage-soft"><span class="brass-rule"></span>{sold ? 'Contact' : 'Schedule a Showing'}</p>
+      <h2 id="contact-heading" class="display mt-7 text-[clamp(2.5rem,6vw,4.9rem)]">{heading}</h2>
+      <p class="mt-7 max-w-md text-white/75">{intro}</p>
+
+      <div class="mt-12 space-y-7 border-t border-white/15 pt-8">
+        <div>
+          <p class="text-[0.64rem] uppercase tracking-[0.24em] text-white/50">{contact.role ?? 'Your contact'}</p>
+          <p class="mt-2 font-serif text-[1.65rem] leading-tight">{contact.name ?? <Placeholder label="Contact name" />}</p>
+          {contact.brokerage && <p class="mt-1 text-sm text-white/60">{contact.brokerage}</p>}
+        </div>
+        <div class="flex flex-col gap-3 text-[0.98rem]">
+          {contact.phone ? (
+            <a href={telHref(contact.phone)} class="contact-line"><span>Call or text</span>{contact.phone}</a>
+          ) : (
+            <p class="contact-line"><span>Phone</span><Placeholder label="Phone number" /></p>
+          )}
+          {contact.email ? (
+            <a href={`mailto:${contact.email}?subject=${encodeURIComponent(subject)}`} class="contact-line"><span>Email</span><span class="break-all">{contact.email}</span></a>
+          ) : (
+            <p class="contact-line"><span>Email</span><Placeholder label="Email address" /></p>
+          )}
+        </div>
+        <ShareButton class="pt-2 text-[0.68rem] font-medium uppercase tracking-[0.22em] text-white/80 hover:text-white" label="Share with someone" />
+      </div>
+    </div>
+
+    <div class="md:col-span-6 md:col-start-7 lg:col-span-6 lg:col-start-7" data-reveal>
+      {formReady ? (
+        <form
+          id="showing-form"
+          name="showing-request"
+          method="POST"
+          class="space-y-7"
+          data-provider={provider}
+          data-endpoint={provider === 'formspree' ? endpoint : provider === 'web3forms' ? 'https://api.web3forms.com/submit' : '/'}
+          {...(provider === 'netlify' ? { 'data-netlify': 'true', 'netlify-honeypot': 'company' } : {})}
+          novalidate
+        >
+          {provider === 'netlify' && <input type="hidden" name="form-name" value="showing-request" />}
+          {provider === 'web3forms' && <input type="hidden" name="access_key" value={accessKey} />}
+          <input type="hidden" name="subject" value={subject} />
+          <p class="hidden" aria-hidden="true"><label>Company <input name="company" tabindex="-1" autocomplete="off" /></label></p>
+
+          <div class="grid gap-7 sm:grid-cols-2">
+            <div class="field sm:col-span-2">
+              <label for="f-name">Name</label>
+              <input id="f-name" name="name" type="text" autocomplete="name" required />
+            </div>
+            <div class="field">
+              <label for="f-email">Email</label>
+              <input id="f-email" name="email" type="email" autocomplete="email" inputmode="email" required />
+            </div>
+            <div class="field">
+              <label for="f-phone">Phone <span class="opt">Optional</span></label>
+              <input id="f-phone" name="phone" type="tel" autocomplete="tel" inputmode="tel" />
+            </div>
+            {!sold && (
+              <div class="field sm:col-span-2">
+                <label for="f-date">Preferred showing date <span class="opt">Optional</span></label>
+                <input id="f-date" name="preferred_date" type="date" />
+              </div>
+            )}
+            <div class="field sm:col-span-2">
+              <label for="f-message">Message</label>
+              <textarea id="f-message" name="message" rows="4" required>{sold ? '' : 'I would like to schedule a private showing.'}</textarea>
+            </div>
+          </div>
+
+          <div class="flex flex-col gap-5 pt-2 sm:flex-row sm:items-center sm:justify-between">
+            <button type="submit" class="btn bg-ivory text-charcoal hover:bg-sage-soft">{sold ? 'Send Message' : 'Request a Showing'}</button>
+            <p class="form-status text-sm text-white/70" role="status" aria-live="polite"></p>
+          </div>
+        </form>
+      ) : (
+        <div class="flex h-full flex-col justify-center border-t border-white/15 pt-10 md:border-l md:border-t-0 md:pl-14 md:pt-0">
+          <p class="font-serif text-[clamp(1.6rem,3vw,2.2rem)] leading-snug text-white/90">
+            {sold ? 'We’re glad to answer questions.' : 'The quickest way to arrange a visit is to call, text or email directly.'}
+          </p>
+          <div class="mt-10 flex flex-col gap-3 sm:flex-row">
+            {contact.phone && <a href={telHref(contact.phone)} class="btn bg-ivory text-charcoal hover:bg-sage-soft">Call {contact.phone}</a>}
+            {contact.email && <a href={`mailto:${contact.email}?subject=${encodeURIComponent(subject)}`} class="btn btn-ghost-light">Send an Email</a>}
+            {!contact.phone && !contact.email && <p class="text-sm text-white/60"><Placeholder label="Add contact.phone or contact.email to enable these buttons" /></p>}
+          </div>
+        </div>
+      )}
+    </div>
+  </div>
+</section>
+
+<style>
+  .contact-line { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.25rem 1rem; }
+  .contact-line > span:first-child { width: 6.5rem; flex: none; font-size: 0.64rem; text-transform: uppercase; letter-spacing: 0.22em; color: rgb(255 255 255 / 0.5); }
+  a.contact-line { transition: color 0.3s; }
+  a.contact-line:hover { color: var(--color-sage-soft); }
+  #contact :global(.placeholder) { color: rgb(255 255 255 / 0.6); border-color: rgb(255 255 255 / 0.3); }
+  .field label { display: block; font-size: 0.64rem; font-weight: 500; text-transform: uppercase; letter-spacing: 0.22em; color: rgb(255 255 255 / 0.6); }
+  .field .opt { margin-left: 0.5rem; letter-spacing: 0.12em; color: rgb(255 255 255 / 0.35); }
+  .field input, .field textarea {
+    width: 100%; margin-top: 0.6rem; padding: 0.6rem 0; background: transparent; color: #fff; font-size: 1.05rem;
+    border: 0; border-bottom: 1px solid rgb(255 255 255 / 0.25); border-radius: 0; outline: none; transition: border-color 0.3s; color-scheme: dark;
+  }
+  .field textarea { resize: vertical; min-height: 6rem; line-height: 1.6; }
+  .field input:focus, .field textarea:focus { border-color: var(--color-sage-soft); }
+  .field [aria-invalid='true'] { border-color: #d9a48f; }
+</style>
+
+<script>
+  const form = document.getElementById('showing-form') as HTMLFormElement | null;
+  if (form) {
+    const status = form.querySelector<HTMLElement>('.form-status')!;
+    const button = form.querySelector<HTMLButtonElement>('button[type=submit]')!;
+    const date = form.querySelector<HTMLInputElement>('input[type=date]');
+    if (date) date.min = new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 10);
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      let firstInvalid: HTMLInputElement | null = null;
+      for (const el of form.querySelectorAll<HTMLInputElement>('input[required], textarea[required], input[type=email]')) {
+        const ok = el.checkValidity() && (!el.required || el.value.trim() !== '');
+        el.setAttribute('aria-invalid', String(!ok));
+        if (!ok && !firstInvalid) firstInvalid = el;
+      }
+      if (firstInvalid) {
+        status.textContent = 'Please complete your name, a valid email and a message.';
+        firstInvalid.focus();
+        return;
+      }
+      const data = new FormData(form);
+      if (data.get('company')) return; // bot
+      data.delete('company');
+      const provider = form.dataset.provider;
+      button.disabled = true;
+      status.textContent = 'Sending…';
+      try {
+        const res =
+          provider === 'netlify'
+            ? await fetch('/', { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: new URLSearchParams(data as unknown as Record<string, string>).toString() })
+            : await fetch(form.dataset.endpoint!, { method: 'POST', headers: { Accept: 'application/json', 'Content-Type': 'application/json' }, body: JSON.stringify(Object.fromEntries(data)) });
+        if (!res.ok) throw new Error(String(res.status));
+        form.reset();
+        status.textContent = 'Thank you — your message has been sent. We’ll be in touch shortly.';
+      } catch {
+        status.textContent = 'Sorry, your message could not be sent. Please call or email instead.';
+      } finally {
+        button.disabled = false;
+      }
+    });
+  }
+</script>

@@ -1,0 +1,40 @@
+---
+import Placeholder from './Placeholder.astro';
+import { property } from '../config/property';
+---
+
+<section id="details" class="border-t border-line bg-paper py-24 md:py-36" aria-labelledby="details-heading">
+  <div class="container-x">
+    <div class="grid gap-8 md:grid-cols-12 md:gap-x-10" data-reveal>
+      <div class="md:col-span-7">
+        <p class="eyebrow flex items-center gap-4"><span class="brass-rule"></span>Specifications</p>
+        <h2 id="details-heading" class="display mt-7 text-[clamp(2.5rem,6.4vw,5.4rem)]">The Details</h2>
+      </div>
+      <p class="self-end text-[0.9rem] text-muted md:col-span-4 md:col-start-9">
+        Items shown in brackets are being confirmed and will be added shortly. All information should be independently verified.
+      </p>
+    </div>
+
+    <div class="mt-16 grid gap-x-16 gap-y-16 md:mt-24 md:grid-cols-2 xl:gap-x-24">
+      {property.specs.map((group, gi) => (
+        <section aria-labelledby={`spec-${gi}`} data-reveal style={`--reveal-delay:${(gi % 2) * 0.1}s`}>
+          <div class="flex items-baseline justify-between border-b border-charcoal/70 pb-4">
+            <h3 id={`spec-${gi}`} class="font-serif text-[1.75rem] leading-none">{group.group}</h3>
+            <span class="text-[0.62rem] tracking-[0.24em] text-muted">{String(gi + 1).padStart(2, '0')}</span>
+          </div>
+          <dl>
+            {group.items.map((item) => (
+              <div class="grid grid-cols-[minmax(7.5rem,40%)_1fr] gap-x-6 border-b border-line py-4 sm:grid-cols-[11rem_1fr]">
+                <dt class="pt-0.5 text-[0.66rem] font-medium uppercase leading-relaxed tracking-[0.18em] text-muted">{item.label}</dt>
+                <dd class="text-[0.98rem] leading-relaxed text-charcoal">
+                  {item.value ?? <Placeholder label="To be provided" />}
+                  {item.note && <span class="mt-1 block text-[0.8rem] italic text-muted">{item.note}</span>}
+                </dd>
+              </div>
+            ))}
+          </dl>
+        </section>
+      ))}
+    </div>
+  </div>
+</section>

@@ -1,0 +1,11 @@
+---
+/** The property mark: a low ranch roofline. Also used as the favicon. */
+interface Props { class?: string }
+const { class: className = 'h-6 w-6' } = Astro.props;
+---
+<svg class={className} viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.1" aria-hidden="true">
+  <circle cx="16" cy="16" r="15.2" />
+  <path d="M7 17.5 16 11l9 6.5" />
+  <path d="M9.5 16v6.5h13V16" />
+  <path d="M14.5 22.5v-3.5h3v3.5" />
+</svg>

@@ -1,0 +1,60 @@
+---
+import { property } from '../config/property';
+import { resolvedDocuments } from '../lib/content';
+
+const docs = resolvedDocuments().filter((d) => d.href || property.showForthcomingDocuments);
+---
+
+<section id="documents" class="bg-ivory py-24 md:py-36" aria-labelledby="documents-heading">
+  <div class="container-x">
+    <div class="grid gap-8 md:grid-cols-12 md:gap-x-10" data-reveal>
+      <div class="md:col-span-7">
+        <p class="eyebrow flex items-center gap-4"><span class="brass-rule"></span>Documents &amp; Downloads</p>
+        <h2 id="documents-heading" class="display mt-7 text-[clamp(2.5rem,6.4vw,5.4rem)]">Property Documents</h2>
+      </div>
+      <p class="self-end text-ink md:col-span-4 md:col-start-9">
+        Review materials online or download them to share. Documents open in your browser on phones, tablets and computers.
+      </p>
+    </div>
+
+    {docs.length === 0 ? (
+      <p class="mt-16 text-muted">Property documents will be posted here. Please <a class="link-line text-charcoal" href="#contact">get in touch</a> to request information.</p>
+    ) : (
+      <ul class="mt-16 grid border-l border-t border-line sm:grid-cols-2 md:mt-24 lg:grid-cols-3">
+        {docs.map((d, i) => (
+          <li class:list={['doc group relative flex flex-col border-b border-r border-line bg-ivory p-7 md:p-9', !d.href && 'is-pending']} data-reveal style={`--reveal-delay:${(i % 3) * 0.08}s`}>
+            <div class="flex items-start justify-between">
+              <svg class="doc-icon h-14 w-11" viewBox="0 0 44 56" fill="none" aria-hidden="true">
+                <path d="M1 1h29l13 13v41H1z" stroke="currentColor" stroke-width="1" />
+                <path d="M30 1v13h13" stroke="currentColor" stroke-width="1" />
+                <rect x="1" y="34" width="30" height="13" fill="currentColor" />
+                <text x="16" y="43.6" text-anchor="middle" font-family="Jost Variable, sans-serif" font-size="8" font-weight="600" letter-spacing="1.2" fill="var(--color-ivory)">PDF</text>
+              </svg>
+              <span class="text-[0.62rem] uppercase tracking-[0.22em] text-muted">
+                {d.href ? <>PDF{d.size && <> · {d.size}</>}</> : 'Forthcoming'}
+              </span>
+            </div>
+            <h3 class="mt-8 font-serif text-[1.6rem] leading-tight">{d.title}</h3>
+            <p class="mt-3 flex-1 text-[0.92rem] text-ink">{d.description}</p>
+            {d.href ? (
+              <div class="mt-8 flex flex-wrap gap-x-7 gap-y-3 text-[0.68rem] font-medium uppercase tracking-[0.22em]">
+                <a href={d.href} target="_blank" rel="noopener" class="link-line">View<span class="sr-only"> {d.title} (opens in a new tab)</span></a>
+                <a href={d.href} download class="link-line">Download<span class="sr-only"> {d.title}</span></a>
+              </div>
+            ) : (
+              <p class="mt-8 text-[0.68rem] uppercase tracking-[0.22em] text-muted">Available on request · <a href="#contact" class="link-line text-ink">Ask</a></p>
+            )}
+          </li>
+        ))}
+      </ul>
+    )}
+  </div>
+</section>
+
+<style>
+  .doc { transition: background-color 0.5s var(--ease-editorial); }
+  .doc:not(.is-pending):hover { background: #fbf9f5; }
+  .doc-icon { color: var(--color-sage); }
+  .is-pending .doc-icon { color: var(--color-taupe); }
+  .is-pending h3 { color: var(--color-ink); }
+</style>

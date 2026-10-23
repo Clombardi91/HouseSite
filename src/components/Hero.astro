@@ -1,0 +1,98 @@
+---
+import { Picture } from 'astro:assets';
+import { property } from '../config/property';
+import { getPhoto, identity, cityLine, statusLabels } from '../lib/content';
+
+const photo = getPhoto(property.hero.photo);
+const status = property.status;
+const widths = photo?.image ? [640, 960, 1280, 1680, 2200, 2800].filter((w) => w <= photo.image!.width) : [];
+if (photo?.image && widths.length === 0) widths.push(photo.image.width);
+---
+
+<section id="top" class="hero relative isolate flex min-h-[560px] items-end overflow-hidden bg-charcoal text-white" aria-label="Introduction">
+  <div class="hero-media absolute inset-0 -z-10" data-parallax>
+    {photo?.image ? (
+      <Picture
+        src={photo.image}
+        formats={['avif', 'webp']}
+        widths={widths}
+        sizes="100vw"
+        alt={photo.alt}
+        loading="eager"
+        fetchpriority="high"
+        class="h-full w-full object-cover"
+        style={`object-position: ${property.hero.focus}`}
+      />
+    ) : (
+      <div class="hero-placeholder h-full w-full" role="img" aria-label="Primary exterior photograph to come">
+        <span class="absolute right-5 top-24 max-w-[14rem] text-right text-[0.62rem] uppercase leading-relaxed tracking-[0.22em] text-white/55 md:right-10">
+          Hero photograph to come<br /><code class="normal-case tracking-normal">src/assets/photos/{photo?.file ?? 'exterior/front.jpg'}</code>
+        </span>
+      </div>
+    )}
+  </div>
+  <div class="hero-scrim absolute inset-0 -z-10" aria-hidden="true"></div>
+
+  <div class="hero-content container-x pb-[max(5.5rem,calc(env(safe-area-inset-bottom)+4.5rem))] md:pb-24">
+    <p class="hero-in flex flex-wrap items-center gap-x-4 gap-y-2 text-[0.68rem] font-medium uppercase tracking-[0.3em] text-white/85" style="--d: 0.1s">
+      {status !== 'for-sale' && (
+        <span class="inline-flex items-center gap-2 border border-white/50 px-3 py-1.5 text-white">
+          <span class="h-1.5 w-1.5 rounded-full bg-brass" aria-hidden="true"></span>{statusLabels[status]}
+        </span>
+      )}
+      <span>{property.address.street ? `${identity()} · ${cityLine()}` : 'Single-Level Brick Ranch'}</span>
+    </p>
+    <h1 class="hero-in display mt-5 max-w-[11ch] text-[clamp(3.6rem,13vw,10rem)]" style="--d: 0.25s">{property.hero.headline}</h1>
+    {property.hero.intro && (
+      <p class="hero-in mt-6 max-w-md text-[1.02rem] font-light leading-relaxed text-white/85 md:text-lg" style="--d: 0.45s">{property.hero.intro}</p>
+    )}
+    <div class="hero-in mt-9 flex flex-wrap gap-3" style="--d: 0.6s">
+      <a href="#residence" class="btn btn-ghost-light bg-white/5 backdrop-blur-[2px]">Explore the Home</a>
+    </div>
+  </div>
+
+  <a href="#residence" class="scroll-cue absolute bottom-7 right-5 hidden items-center gap-3 text-[0.6rem] uppercase tracking-[0.3em] text-white/70 md:right-10 md:flex" aria-label="Scroll to the home">
+    Scroll <span class="cue-line" aria-hidden="true"></span>
+  </a>
+</section>
+
+<style>
+  .hero { height: 100vh; height: 100svh; }
+  .hero-media { will-change: transform; }
+  .hero-media :global(picture) { display: block; height: 100%; }
+  .hero-scrim { background: linear-gradient(to top, rgb(18 17 15 / 0.62) 0%, rgb(18 17 15 / 0.18) 45%, rgb(18 17 15 / 0.08) 70%, rgb(18 17 15 / 0.3) 100%); }
+  .hero-placeholder {
+    position: relative;
+    background:
+      repeating-linear-gradient(135deg, transparent 0 30px, rgb(255 255 255 / 0.025) 30px 31px),
+      radial-gradient(120% 90% at 70% 20%, #57524a 0%, #34312c 55%, #24221f 100%);
+  }
+  .cue-line { position: relative; display: block; width: 3.5rem; height: 1px; background: rgb(255 255 255 / 0.3); overflow: hidden; }
+  .cue-line::after { content: ''; position: absolute; inset: 0; background: #fff; transform: translateX(-100%); animation: cue 2.6s var(--ease-editorial) infinite; }
+  @keyframes cue { 0% { transform: translateX(-100%); } 55%, 100% { transform: translateX(100%); } }
+  @media (prefers-reduced-motion: no-preference) {
+    :global(.js) .hero-in { opacity: 0; transform: translateY(18px); animation: rise 1.3s var(--ease-editorial) forwards; animation-delay: var(--d); }
+    :global(.js) .hero-media { animation: settle 2.6s var(--ease-editorial) both; }
+  }
+  @keyframes rise { to { opacity: 1; transform: none; } }
+  @keyframes settle { from { opacity: 0.4; scale: 1.06; } to { opacity: 1; scale: 1; } }
+</style>
+
+<script>
+  // Gentle parallax as the hero gives way to the page.
+  const media = document.querySelector<HTMLElement>('[data-parallax]');
+  const content = document.querySelector<HTMLElement>('.hero-content');
+  const reduce = window.matchMedia('(prefers-reduced-motion: reduce)');
+  if (media && content && !reduce.matches) {
+    let ticking = false;
+    const apply = () => {
+      const h = window.innerHeight;
+      const y = Math.min(window.scrollY, h);
+      media.style.transform = `translate3d(0, ${y * 0.32}px, 0)`;
+      content.style.opacity = String(1 - (y / h) * 1.4);
+      content.style.transform = `translate3d(0, ${y * 0.12}px, 0)`;
+      ticking = false;
+    };
+    window.addEventListener('scroll', () => { if (!ticking) { ticking = true; requestAnimationFrame(apply); } }, { passive: true });
+  }
+</script>

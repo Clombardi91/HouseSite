@@ -1,0 +1,31 @@
+{
+  "name": "mebane-residence",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Property website for a brick ranch home in Mebane, North Carolina.",
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview",
+    "check": "astro check",
+    "qr": "node scripts/generate-qr.mjs"
+  },
+  "engines": {
+    "node": ">=18.20"
+  },
+  "dependencies": {
+    "@fontsource-variable/cormorant-garamond": "^5.3.0",
+    "@fontsource-variable/jost": "^5.3.0",
+    "@tailwindcss/vite": "^4.1.18",
+    "astro": "^5.18.2",
+    "sharp": "^0.34.5",
+    "tailwindcss": "^4.1.18"
+  },
+  "devDependencies": {
+    "@astrojs/check": "^0.9.12",
+    "@types/node": "^22.20.5",
+    "qrcode": "^1.5.4",
+    "typescript": "^5.9.3"
+  }
+}

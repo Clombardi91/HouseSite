@@ -1,0 +1,48 @@
+---
+/** Slim action bar for phones (e.g. after scanning the yard-sign QR code). */
+import { property } from '../config/property';
+import { telHref } from '../lib/content';
+const { phone } = property.contact;
+const sold = property.status === 'sold';
+---
+
+<div id="mobile-bar" class="mobile-bar fixed inset-x-0 bottom-0 z-40 md:hidden" aria-label="Quick actions" role="region">
+  <div class="grid grid-cols-3 border-t border-line bg-ivory/95 pb-[env(safe-area-inset-bottom)] text-[0.62rem] font-medium uppercase tracking-[0.2em] text-charcoal backdrop-blur-md">
+    <a href="#gallery" class="bar-item">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" aria-hidden="true"><rect x="3" y="5" width="18" height="14" /><path d="m3 16 5-5 4 4 3-3 6 6" /></svg>Photos
+    </a>
+    {phone ? (
+      <a href={telHref(phone)} class="bar-item border-x border-line">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" aria-hidden="true"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a1 1 0 0 1-1 1A16 16 0 0 1 4 5a1 1 0 0 1 1-1z" /></svg>Call
+      </a>
+    ) : (
+      <a href="#documents" class="bar-item border-x border-line">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" aria-hidden="true"><path d="M6 3h9l4 4v14H6z" /><path d="M15 3v4h4M9 12h7M9 16h7" /></svg>Documents
+      </a>
+    )}
+    <a href="#contact" class="bar-item bg-charcoal text-ivory">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" aria-hidden="true"><rect x="4" y="5" width="16" height="15" /><path d="M4 10h16M9 3v4M15 3v4" /></svg>{sold ? 'Contact' : 'Showing'}
+    </a>
+  </div>
+</div>
+
+<style>
+  .mobile-bar { transform: translateY(110%); transition: transform 0.55s var(--ease-editorial); }
+  .mobile-bar.is-shown { transform: none; }
+  .bar-item { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.35rem; min-height: 3.6rem; }
+  .bar-item svg { width: 1.15rem; height: 1.15rem; }
+</style>
+
+<script>
+  const bar = document.getElementById('mobile-bar')!;
+  const hero = document.getElementById('top');
+  const contact = document.getElementById('contact');
+  let inContact = false;
+  const update = () => {
+    const past = window.scrollY > (hero?.offsetHeight ?? 400) * 0.6;
+    bar.classList.toggle('is-shown', past && !inContact);
+  };
+  if (contact) new IntersectionObserver(([e]) => { inContact = e.isIntersecting; update(); }, { threshold: 0.15 }).observe(contact);
+  window.addEventListener('scroll', () => requestAnimationFrame(update), { passive: true });
+  update();
+</script>
